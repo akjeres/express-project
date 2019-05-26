@@ -47,7 +47,6 @@ router.post('/', isAuthorized, function(req, res, next) {
 
   if (result) {
     let currentUserList = getUserList();
-    let len;
     currentUserList
     .then(resolve => {
       let dataToSave = Array.from(resolve);
@@ -69,13 +68,84 @@ router.post('/', isAuthorized, function(req, res, next) {
         res.send(dataToSave);
       });
     }, reject => {
+      res.status(500).send('Some error happened');
       throw new Error('Some error happened');
     })
     .catch(err => {
-      throw new Error(err);
+      res.status(err.status).send(err.message);
     });
   } else {
     res.status(400).send(`Some error`);
+  }
+});
+
+router.put('/:id', isAuthorized, function(req, res, next) {
+  if (req.params && !!req.params.id) {
+    const ID = req.params.id;
+    let updatedUser = req.body;
+    let currentUserList = getUserList(), msg, stat;
+    currentUserList
+    .then(resolve => {
+      let dataToSave = Array.from(resolve);
+      if (dataToSave.some((i) => i['_id'] == ID)) {
+        if (Array.isArray(req.body)) {
+          msg = 'Invalid data provided';
+          stat = 400;
+          res.status(stat).send(msg);
+          throw new Error({
+            status: stat,
+            message: msg,
+          });
+        } else {
+          if ('_id' in updatedUser && updatedUser['_id'] != ID) {
+            msg = `You can not change User ID`;
+            stat = 403;
+            res.status(stat).send(msg);
+            throw new Error({
+              status: stat,
+              message: msg,
+            });
+          } else {
+            dataToSave = dataToSave.map((i) => {
+              if (i['_id'] == ID) {
+                updatedUser = Object.assign(i, updatedUser);
+                return updatedUser;
+              }
+              return i;
+            });
+            fs.writeJson('./files/userlist.json', dataToSave, err => {
+              if (err) {
+                res.status(500).send(err);
+                throw new Error(err);
+              }
+        
+              res.send(dataToSave);
+            });
+          }
+        }
+      } else {
+        msg = `User with '_id' = ${ID} does not exist. Please change the '_id'`;
+        stat = 403;
+        res.status(stat).send(msg);
+        throw new Error({
+          status: stat,
+          message: msg,
+        });
+      }
+    }, reject => {
+      stat = 500;
+      msg = 'Cannot load Users List'
+      throw new Error({
+        status: stat,
+        message: msg,
+      });
+    })
+    .catch(err => {
+      res.status(stat).send(msg);
+    });
+  } else {
+    res.status(403).send(`Invalid ID`);
+    throw new Error(`Invalid ID`);
   }
 });
 
