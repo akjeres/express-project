@@ -1,11 +1,18 @@
 var express = require('express');
 var router = express.Router();
+var fs = require('fs-extra');
 
-const { saveName } = require("../services/user.service");
+const { saveName, getUserList } = require("../services/user.service");
 const { isAuthorized } = require("../middlewares/auth.middleware");
 
 router.get('/', function(req, res, next) {
-  res.send(`Welcome!`);
+  fs.readJson('./files/userlist.json')
+  .then(packageObj => {
+    res.send(packageObj)
+  })
+  .catch(err => {
+    res.status(500).send(`User List is not defined<br>${err}`)
+  })
 });
 
 router.post('/', isAuthorized, function(req, res, next) {
