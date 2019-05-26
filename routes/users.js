@@ -149,4 +149,50 @@ router.put('/:id', isAuthorized, function(req, res, next) {
   }
 });
 
+router.delete('/:id', isAuthorized, function(req, res, next) {
+  if (req.params && !!req.params.id) {
+    const ID = req.params.id;
+    let currentUserList = getUserList(), msg, stat;
+    currentUserList
+    .then(resolve => {
+      let dataToSave = Array.from(resolve);
+      if (dataToSave.some((i) => i['_id'] == ID)) {
+        let result = [];
+        dataToSave.map((j) => {
+          if (j['_id'] != ID) result.push(j);
+        });
+        fs.writeJson('./files/userlist.json', result, err => {
+          if (err) {
+            res.status(500).send(err);
+            throw new Error(err);
+          }
+    
+          res.send(result);
+        });
+      } else {
+        msg = `User with '_id' = ${ID} does not exist. Please change the '_id'`;
+        stat = 403;
+        res.status(stat).send(msg);
+        throw new Error({
+          status: stat,
+          message: msg,
+        });
+      }
+    }, reject => {
+      stat = 500;
+      msg = 'Cannot load Users List'
+      throw new Error({
+        status: stat,
+        message: msg,
+      });
+    })
+    .catch(err => {
+      res.status(stat).send(msg);
+    });
+  } else {
+    res.status(403).send(`Invalid ID`);
+    throw new Error(`Invalid ID`);
+  }
+});
+
 module.exports = router;
