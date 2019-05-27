@@ -61,6 +61,17 @@ router.post('/', isAuthorized, function(req, res, next) {
         }
         dataToSave.push(j);
       });
+      dataToSave.sort((a, b) => {
+        let innA = parseInt(a['_id']);
+        let innB = parseInt(b['_id']);
+        if (innA > innB) {
+          return 1;
+        }
+        if (innB > innA) {
+          return -1;
+        }
+        return 0;
+      });
       fs.writeJson('./files/userlist.json', dataToSave, err => {
         if (err) {
           res.status(500).send(err);
