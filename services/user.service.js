@@ -26,7 +26,10 @@ const saveUser = (user) => {
     if (user.length) {
       return Array.from(user);
     }
-    return [user];
+    if (Object.keys(user).length) {
+      return [user];
+    }
+    return null;
   } else {
     return null;
   }

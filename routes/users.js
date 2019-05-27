@@ -51,8 +51,11 @@ router.post('/', isAuthorized, function(req, res, next) {
     .then(resolve => {
       let dataToSave = Array.from(resolve);
       result.forEach((j) => {
-        
-        if (!('_id' in j)) j['_id'] = (dataToSave.length + 1).toString();
+        if (isNaN(Number(result["_id"])) || Number(result["_id"]) == 0) {
+          res.status(400).send('Invalid User _id');
+          throw new Error('Invalid User _id');
+        }
+        if (!('_id' in j)) j['_id'] = (parseInt(dataToSave[dataToSave.length - 1]["_id"]) + 1).toString();
         if (dataToSave.some((k) => k['_id'] == j['_id'])) {
           res.status(403).send(`User with '_id' = ${j['_id']} exists. Please change the '_id'`);
           throw new Error(`User with '_id' = ${j['_id']} exists. Please change the '_id'`);
@@ -68,14 +71,14 @@ router.post('/', isAuthorized, function(req, res, next) {
         res.send(dataToSave);
       });
     }, reject => {
-      res.status(500).send('Some error happened');
-      throw new Error('Some error happened');
+      res.status(500).send('Cannot load Users List');
+      throw new Error('Cannot load Users List');
     })
     .catch(err => {
       res.status(err.status).send(err.message);
     });
   } else {
-    res.status(400).send(`Some error`);
+    res.status(400).send(`Empty user data`);
   }
 });
 
