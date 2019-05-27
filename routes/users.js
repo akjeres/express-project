@@ -44,14 +44,13 @@ router.get('/:id', isAuthorized, function(req, res, next) {
 
 router.post('/', isAuthorized, function(req, res, next) {
   const result = saveUser(req.body);
-
   if (result) {
     let currentUserList = getUserList();
     currentUserList
     .then(resolve => {
       let dataToSave = Array.from(resolve);
       result.forEach((j) => {
-        if (isNaN(Number(result["_id"])) || Number(result["_id"]) == 0) {
+        if (isNaN(Number(j["_id"])) || Number(j["_id"]) == 0) {
           res.status(400).send('Invalid User _id');
           throw new Error('Invalid User _id');
         }
